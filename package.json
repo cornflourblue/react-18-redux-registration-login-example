@@ -1,5 +1,5 @@
 {
-    "name": "react-18-redux-jwt-authentication-example",
+    "name": "react-18-redux-registration-login-example",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
@@ -19,9 +19,10 @@
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
-        "extends": [
-            "react-app"
-        ]
+        "extends": [ "react-app" ],
+        "rules": {
+            "react-hooks/exhaustive-deps": "off"
+        }
     },
     "browserslist": {
         "production": [

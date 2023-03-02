@@ -36,24 +36,25 @@ function authHeader(url) {
 }
 
 function authToken() {
-    return store.getState().auth.user?.token;
+    return store.getState().auth.value?.token;
 }
 
-function handleResponse(response) {
-    return response.text().then(text => {
-        const data = text && JSON.parse(text);
+async function handleResponse(response) {
+    const isJson = response.headers?.get('content-type')?.includes('application/json');
+    const data = isJson ? await response.json() : null;
 
-        if (!response.ok) {
-            if ([401, 403].includes(response.status) && authToken()) {
-                // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
-                const logout = () => store.dispatch(authActions.logout());
-                logout();
-            }
-
-            const error = (data && data.message) || response.statusText;
-            return Promise.reject(error);
+    // check for error response
+    if (!response.ok) {
+        if ([401, 403].includes(response.status) && authToken()) {
+            // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
+            const logout = () => store.dispatch(authActions.logout());
+            logout();
         }
 
-        return data;
-    });
+        // get error message from body or default to response status
+        const error = (data && data.message) || response.status;
+        return Promise.reject(error);
+    }
+
+    return data;
 }

@@ -1,5 +1,5 @@
-# react-18-redux-jwt-authentication-example
+# react-18-redux-registration-login-example
 
-React 18 + Redux - JWT Authentication Example & Tutorial
+React 18 + Redux - User Registration and Login Example & Tutorial
 
-Documentation at https://jasonwatmore.com/post/2022/06/15/react-18-redux-jwt-authentication-example-tutorial
+Documentation at https://jasonwatmore.com/react-18-redux-user-registration-and-login-example-tutorial

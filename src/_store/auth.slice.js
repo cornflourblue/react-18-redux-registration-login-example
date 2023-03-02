@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
+import { alertActions } from '_store';
 import { history, fetchWrapper } from '_helpers';
 
 // create slice
@@ -8,8 +9,7 @@ const name = 'auth';
 const initialState = createInitialState();
 const reducers = createReducers();
 const extraActions = createExtraActions();
-const extraReducers = createExtraReducers();
-const slice = createSlice({ name, initialState, reducers, extraReducers });
+const slice = createSlice({ name, initialState, reducers });
 
 // exports
 
@@ -21,20 +21,17 @@ export const authReducer = slice.reducer;
 function createInitialState() {
     return {
         // initialize state from local storage to enable user to stay logged in
-        user: JSON.parse(localStorage.getItem('user')),
-        error: null
+        value: JSON.parse(localStorage.getItem('auth'))
     }
 }
 
 function createReducers() {
     return {
-        logout
+        setAuth
     };
 
-    function logout(state) {
-        state.user = null;
-        localStorage.removeItem('user');
-        history.navigate('/login');
+    function setAuth(state, action) {
+        state.value = action.payload;
     }
 }
 
@@ -42,42 +39,42 @@ function createExtraActions() {
     const baseUrl = `${process.env.REACT_APP_API_URL}/users`;
 
     return {
-        login: login()
-    };    
+        login: login(),
+        logout: logout()
+    };
 
     function login() {
         return createAsyncThunk(
             `${name}/login`,
-            async ({ username, password }) => await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password })
+            async function ({ username, password }, { dispatch }) {
+                dispatch(alertActions.clear());
+                try {
+                    const user = await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password });
+
+                    // set auth user in redux state
+                    dispatch(authActions.setAuth(user));
+
+                    // store user details and jwt token in local storage to keep user logged in between page refreshes
+                    localStorage.setItem('auth', JSON.stringify(user));
+
+                    // get return url from location state or default to home page
+                    const { from } = history.location.state || { from: { pathname: '/' } };
+                    history.navigate(from);
+                } catch (error) {
+                    dispatch(alertActions.error(error));
+                }
+            }
         );
     }
-}
 
-function createExtraReducers() {
-    return {
-        ...login()
-    };
-
-    function login() {
-        var { pending, fulfilled, rejected } = extraActions.login;
-        return {
-            [pending]: (state) => {
-                state.error = null;
-            },
-            [fulfilled]: (state, action) => {
-                const user = action.payload;
-                
-                // store user details and jwt token in local storage to keep user logged in between page refreshes
-                localStorage.setItem('user', JSON.stringify(user));
-                state.user = user;
-
-                // get return url from location state or default to home page
-                const { from } = history.location.state || { from: { pathname: '/' } };
-                history.navigate(from);
-            },
-            [rejected]: (state, action) => {
-                state.error = action.error;
+    function logout() {
+        return createAsyncThunk(
+            `${name}/logout`,
+            function (arg, { dispatch }) {
+                dispatch(authActions.setAuth(null));
+                localStorage.removeItem('auth');
+                history.navigate('/account/login');
             }
-        };
+        );
     }
 }

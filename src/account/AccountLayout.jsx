@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import { history } from '_helpers';
 import { Login, Register } from './';
 
 export { AccountLayout };
@@ -10,13 +8,10 @@ export { AccountLayout };
 function AccountLayout() {
     const auth = useSelector(x => x.auth.value);
 
-    useEffect(() => {
-        // redirect to home if already logged in
-        if (auth) history.navigate('/');
-    }, []);
-
-    // prevent flicker before redirect if already logged in
-    if (auth) return null;
+    // redirect to home if already logged in
+    if (auth) {
+        return <Navigate to="/" />;
+    }
 
     return (
         <div className="container">
